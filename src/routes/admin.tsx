@@ -67,8 +67,9 @@ function Admin() {
         </div>
       </div>
 
-      <div className="rounded-2xl border bg-accent/30 p-6 mt-6">
-        <p className="text-sm">Kitchen view: <Link to="/kitchen" className="text-primary font-semibold underline">/kitchen</Link></p>
+      <div className="rounded-2xl border bg-accent/30 p-6 mt-6 flex flex-wrap gap-4 text-sm">
+        <Link to="/admin/menu" className="text-primary font-semibold underline">Manage menu →</Link>
+        <Link to="/kitchen" className="text-primary font-semibold underline">Kitchen view →</Link>
       </div>
     </main>
   );
