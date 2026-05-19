@@ -39,7 +39,7 @@ function Kitchen() {
 
   const advance = async (id: string, status: string) => {
     const next = NEXT[status]; if (!next) return;
-    const { error } = await supabase.from("orders").update({ status: next, updated_at: new Date().toISOString() }).eq("id", id);
+    const { error } = await supabase.from("orders").update({ status: next as any, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) toast.error(error.message); else toast.success(`→ ${next}`);
   };
 
