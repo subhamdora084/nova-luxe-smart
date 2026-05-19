@@ -22,6 +22,7 @@ import { Route as CartRouteImport } from './routes/cart'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrackOrderIdRouteImport } from './routes/track.$orderId'
+import { Route as AdminMenuRouteImport } from './routes/admin.menu'
 
 const TrackRoute = TrackRouteImport.update({
   id: '/track',
@@ -88,10 +89,15 @@ const TrackOrderIdRoute = TrackOrderIdRouteImport.update({
   path: '/$orderId',
   getParentRoute: () => TrackRoute,
 } as any)
+const AdminMenuRoute = AdminMenuRouteImport.update({
+  id: '/menu',
+  path: '/menu',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/feedback': typeof FeedbackRoute
@@ -102,11 +108,12 @@ export interface FileRoutesByFullPath {
   '/rewards': typeof RewardsRoute
   '/scan': typeof ScanRoute
   '/track': typeof TrackRouteWithChildren
+  '/admin/menu': typeof AdminMenuRoute
   '/track/$orderId': typeof TrackOrderIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/feedback': typeof FeedbackRoute
@@ -117,12 +124,13 @@ export interface FileRoutesByTo {
   '/rewards': typeof RewardsRoute
   '/scan': typeof ScanRoute
   '/track': typeof TrackRouteWithChildren
+  '/admin/menu': typeof AdminMenuRoute
   '/track/$orderId': typeof TrackOrderIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/feedback': typeof FeedbackRoute
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/rewards': typeof RewardsRoute
   '/scan': typeof ScanRoute
   '/track': typeof TrackRouteWithChildren
+  '/admin/menu': typeof AdminMenuRoute
   '/track/$orderId': typeof TrackOrderIdRoute
 }
 export interface FileRouteTypes {
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
     | '/rewards'
     | '/scan'
     | '/track'
+    | '/admin/menu'
     | '/track/$orderId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/rewards'
     | '/scan'
     | '/track'
+    | '/admin/menu'
     | '/track/$orderId'
   id:
     | '__root__'
@@ -180,12 +191,13 @@ export interface FileRouteTypes {
     | '/rewards'
     | '/scan'
     | '/track'
+    | '/admin/menu'
     | '/track/$orderId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   FeedbackRoute: typeof FeedbackRoute
@@ -291,8 +303,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrackOrderIdRouteImport
       parentRoute: typeof TrackRoute
     }
+    '/admin/menu': {
+      id: '/admin/menu'
+      path: '/menu'
+      fullPath: '/admin/menu'
+      preLoaderRoute: typeof AdminMenuRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminMenuRoute: typeof AdminMenuRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminMenuRoute: AdminMenuRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface TrackRouteChildren {
   TrackOrderIdRoute: typeof TrackOrderIdRoute
@@ -306,7 +335,7 @@ const TrackRouteWithChildren = TrackRoute._addFileChildren(TrackRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   FeedbackRoute: FeedbackRoute,
