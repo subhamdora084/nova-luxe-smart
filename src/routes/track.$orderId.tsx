@@ -40,7 +40,7 @@ function TrackOrder() {
 
   if (!order) return <main className="container py-12 text-center"><Loader2 className="animate-spin size-6 mx-auto" /></main>;
 
-  const currentIdx = STAGES.indexOf(order.status);
+  const currentIdx = STAGES.indexOf(order.status as typeof STAGES[number]);
 
   return (
     <main className="container mx-auto px-4 py-10 max-w-2xl">
