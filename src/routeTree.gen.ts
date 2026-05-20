@@ -23,6 +23,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrackOrderIdRouteImport } from './routes/track.$orderId'
 import { Route as AdminMenuRouteImport } from './routes/admin.menu'
+import { Route as AdminLoginRouteImport } from './routes/admin.login'
 
 const TrackRoute = TrackRouteImport.update({
   id: '/track',
@@ -94,6 +95,11 @@ const AdminMenuRoute = AdminMenuRouteImport.update({
   path: '/menu',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/rewards': typeof RewardsRoute
   '/scan': typeof ScanRoute
   '/track': typeof TrackRouteWithChildren
+  '/admin/login': typeof AdminLoginRoute
   '/admin/menu': typeof AdminMenuRoute
   '/track/$orderId': typeof TrackOrderIdRoute
 }
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/rewards': typeof RewardsRoute
   '/scan': typeof ScanRoute
   '/track': typeof TrackRouteWithChildren
+  '/admin/login': typeof AdminLoginRoute
   '/admin/menu': typeof AdminMenuRoute
   '/track/$orderId': typeof TrackOrderIdRoute
 }
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/rewards': typeof RewardsRoute
   '/scan': typeof ScanRoute
   '/track': typeof TrackRouteWithChildren
+  '/admin/login': typeof AdminLoginRoute
   '/admin/menu': typeof AdminMenuRoute
   '/track/$orderId': typeof TrackOrderIdRoute
 }
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/rewards'
     | '/scan'
     | '/track'
+    | '/admin/login'
     | '/admin/menu'
     | '/track/$orderId'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
     | '/rewards'
     | '/scan'
     | '/track'
+    | '/admin/login'
     | '/admin/menu'
     | '/track/$orderId'
   id:
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/rewards'
     | '/scan'
     | '/track'
+    | '/admin/login'
     | '/admin/menu'
     | '/track/$orderId'
   fileRoutesById: FileRoutesById
@@ -310,14 +322,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMenuRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminLoginRoute: typeof AdminLoginRoute
   AdminMenuRoute: typeof AdminMenuRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminLoginRoute: AdminLoginRoute,
   AdminMenuRoute: AdminMenuRoute,
 }
 
@@ -350,13 +371,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

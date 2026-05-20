@@ -58,13 +58,16 @@ function AdminMenu() {
   });
 
   if (loading) return <main className="container py-12 text-center"><Loader2 className="animate-spin size-6 mx-auto" /></main>;
-  if (!user || !roles.includes("admin")) return (
-    <main className="container py-16 text-center max-w-md mx-auto">
-      <ShieldCheck className="size-12 mx-auto text-primary" />
-      <h1 className="font-display text-3xl font-bold mt-4">Admin access required</h1>
-      <Link to="/login" className="text-primary underline mt-4 inline-block">Sign in</Link>
-    </main>
-  );
+  if (!user || !roles.includes("admin")) {
+    if (typeof window !== "undefined") window.location.href = "/admin/login";
+    return (
+      <main className="container py-16 text-center max-w-md mx-auto">
+        <ShieldCheck className="size-12 mx-auto text-primary" />
+        <h1 className="font-display text-3xl font-bold mt-4">Redirecting…</h1>
+        <Link to="/admin/login" className="text-primary underline mt-4 inline-block">Admin login</Link>
+      </main>
+    );
+  }
 
   const toggleAvail = async (it: MenuItem) => {
     const { error } = await supabase.from("menu_items").update({ is_available: !it.is_available }).eq("id", it.id);

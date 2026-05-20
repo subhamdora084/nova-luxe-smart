@@ -25,6 +25,29 @@ interface CartCtx {
 const Ctx = createContext<CartCtx | undefined>(undefined);
 const STORAGE_KEY = "nova-cart";
 const TABLE_KEY = "nova-table";
+const GUEST_ORDERS_KEY = "nova-guest-orders";
+
+export function saveGuestOrderId(id: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem(GUEST_ORDERS_KEY);
+    const list: string[] = raw ? JSON.parse(raw) : [];
+    if (!list.includes(id)) {
+      list.unshift(id);
+      localStorage.setItem(GUEST_ORDERS_KEY, JSON.stringify(list.slice(0, 20)));
+    }
+  } catch {}
+}
+
+export function getGuestOrderIds(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(GUEST_ORDERS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
