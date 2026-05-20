@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { CreditCard, Smartphone, Wallet, Building2, Banknote, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/hooks/use-cart";
+import { useCart, saveGuestOrderId } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -33,13 +33,12 @@ function Checkout() {
   const total = subtotal + tax;
 
   const placeOrder = async () => {
-    if (!user) { toast.error("Please sign in to place your order"); navigate({ to: "/login", search: { redirect: "/checkout" } }); return; }
     if (items.length === 0) { toast.error("Your cart is empty"); return; }
 
     setProcessing(true);
     try {
       const { data: order, error } = await supabase.from("orders").insert({
-        user_id: user.id,
+        user_id: user?.id ?? null,
         table_number: tableNumber,
         payment_method: method,
         payment_status: method === "cash" ? "pending" : "paid",
@@ -59,6 +58,7 @@ function Checkout() {
       const { error: e2 } = await supabase.from("order_items").insert(orderItems);
       if (e2) throw e2;
 
+      if (!user) saveGuestOrderId(order.id);
       clear();
       toast.success("Order placed! Heading to the kitchen.");
       navigate({ to: "/track/$orderId", params: { orderId: order.id } });
@@ -72,6 +72,13 @@ function Checkout() {
   return (
     <main className="container mx-auto px-4 py-10 max-w-3xl">
       <h1 className="font-display text-4xl font-bold mb-6">Checkout</h1>
+
+      {!user && (
+        <div className="rounded-2xl border border-dashed bg-accent/30 p-4 mb-6 text-sm">
+          Ordering as guest — you'll get a live order tracker. <a href="/login" className="text-primary font-semibold underline">Sign in</a> to earn Nova reward points on this order.
+        </div>
+      )}
+
       <div className="rounded-2xl border bg-card p-6 shadow-card">
         <h2 className="font-display text-xl font-semibold mb-4">Payment method</h2>
         <div className="space-y-2">

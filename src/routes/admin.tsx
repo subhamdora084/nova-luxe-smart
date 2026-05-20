@@ -24,15 +24,16 @@ function Admin() {
   });
 
   if (loading) return <main className="container py-12 text-center"><Loader2 className="animate-spin size-6 mx-auto" /></main>;
-  if (!user || !roles.includes("admin")) return (
-    <main className="container py-16 text-center max-w-md mx-auto">
-      <ShieldCheck className="size-12 mx-auto text-primary" />
-      <h1 className="font-display text-3xl font-bold mt-4">Admin access required</h1>
-      <p className="text-muted-foreground mt-2">Sign in with an admin account to view this dashboard.</p>
-      <p className="text-xs text-muted-foreground mt-4">To grant admin: open the backend and insert a row in <code>user_roles</code> with role=admin for your user id.</p>
-      <Link to="/login" className="text-primary underline mt-4 inline-block">Sign in</Link>
-    </main>
-  );
+  if (!user || !roles.includes("admin")) {
+    if (typeof window !== "undefined") window.location.href = "/admin/login";
+    return (
+      <main className="container py-16 text-center max-w-md mx-auto">
+        <ShieldCheck className="size-12 mx-auto text-primary" />
+        <h1 className="font-display text-3xl font-bold mt-4">Redirecting to admin login…</h1>
+        <Link to="/admin/login" className="text-primary underline mt-4 inline-block">Go to admin login</Link>
+      </main>
+    );
+  }
 
   return (
     <main className="container mx-auto px-4 py-8">

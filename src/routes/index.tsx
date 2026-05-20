@@ -81,6 +81,8 @@ function Home() {
 
       <footer className="border-t py-8 text-center text-sm text-muted-foreground">
         © {new Date().getFullYear()} Nova Luxe — Smart restaurant & hotel ordering.
+        <span className="mx-2">·</span>
+        <Link to="/admin/login" className="hover:text-primary transition">Staff login</Link>
       </footer>
     </main>
   );

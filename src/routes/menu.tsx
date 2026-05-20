@@ -107,9 +107,13 @@ function DishCard({ item, onPick }: { item: MenuItem; onPick: () => void }) {
   return (
     <article className="group rounded-2xl border bg-card overflow-hidden shadow-card hover:shadow-warm transition cursor-pointer" onClick={onPick}>
       <div className="aspect-[4/3] overflow-hidden bg-muted">
-        {item.image_url ? (
-          <img src={item.image_url} alt={item.name} loading="lazy" className="size-full object-cover group-hover:scale-105 transition duration-500" />
-        ) : <div className="size-full bg-muted" />}
+        <img
+          src={item.image_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"}
+          alt={item.name}
+          loading="lazy"
+          onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"; }}
+          className="size-full object-cover group-hover:scale-105 transition duration-500"
+        />
       </div>
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">

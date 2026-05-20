@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Star } from "lucide-react";
+import { Star, Lock, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +23,7 @@ function Feedback() {
   const [loading, setLoading] = useState(false);
 
   const submit = async () => {
-    if (!user) { toast.error("Please sign in"); return; }
+    if (!user) return;
     if (!food || !service) { toast.error("Please rate both food and service"); return; }
     setLoading(true);
     const { error } = await supabase.from("feedback").insert({
@@ -34,6 +34,33 @@ function Feedback() {
     toast.success("Thanks! +20 Nova points awarded 🎉");
     navigate({ to: "/rewards" });
   };
+
+  if (!user) {
+    return (
+      <main className="container mx-auto px-4 py-16 max-w-md">
+        <div className="rounded-3xl border bg-card p-8 shadow-card text-center">
+          <div className="size-14 rounded-2xl bg-primary/10 text-primary grid place-items-center mx-auto">
+            <Lock className="size-7" />
+          </div>
+          <h1 className="font-display text-2xl font-bold mt-4">Login required</h1>
+          <p className="text-muted-foreground mt-2 text-sm">
+            Sign in to submit feedback and earn <span className="font-semibold text-primary">20 Nova points</span> for every review.
+          </p>
+          <div className="mt-6 flex flex-col gap-2">
+            <Link to="/login" search={{ redirect: orderId ? `/feedback?orderId=${orderId}` : "/feedback" }}>
+              <Button className="w-full h-11">Sign in / Sign up</Button>
+            </Link>
+            <Link to="/menu" className="text-xs text-muted-foreground hover:text-foreground transition">
+              ← Back to menu
+            </Link>
+          </div>
+          <div className="mt-6 pt-6 border-t flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <Gift className="size-3.5" /> Rewards & feedback are for registered customers
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="container mx-auto px-4 py-10 max-w-lg">
