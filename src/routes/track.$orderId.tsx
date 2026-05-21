@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { CheckCircle2, Circle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,17 @@ const LABELS: Record<string, string> = {
 function TrackOrder() {
   const { orderId } = Route.useParams();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const ch = supabase
+      .channel(`order-${orderId}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` },
+        () => queryClient.invalidateQueries({ queryKey: ["order", orderId] }))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [orderId, queryClient]);
+
 
   const { data: order } = useQuery({
     queryKey: ["order", orderId, user?.id],

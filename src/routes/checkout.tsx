@@ -1,11 +1,13 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { CreditCard, Smartphone, Wallet, Building2, Banknote, Loader2 } from "lucide-react";
+import { CreditCard, Smartphone, Wallet, Building2, Banknote, Loader2, CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart, saveGuestOrderId } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+
 
 export const Route = createFileRoute("/checkout")({
   component: Checkout,
@@ -25,9 +27,10 @@ const methods: { id: Method; label: string; sub: string; icon: typeof CreditCard
 function Checkout() {
   const { items, subtotal, clear, tableNumber } = useCart();
   const { user } = useAuth();
-  const navigate = useNavigate();
+  
   const [method, setMethod] = useState<Method>("upi");
-  const [processing, setProcessing] = useState(false);
+  const [phase, setPhase] = useState<"idle" | "processing" | "success">("idle");
+  const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
 
   const tax = subtotal * 0.05;
   const total = subtotal + tax;
@@ -35,8 +38,10 @@ function Checkout() {
   const placeOrder = async () => {
     if (items.length === 0) { toast.error("Your cart is empty"); return; }
 
-    setProcessing(true);
+    setPhase("processing");
     try {
+      if (method !== "cash") await new Promise((r) => setTimeout(r, 1800));
+
       const { data: order, error } = await supabase.from("orders").insert({
         user_id: user?.id ?? null,
         table_number: tableNumber,
@@ -60,12 +65,11 @@ function Checkout() {
 
       if (!user) saveGuestOrderId(order.id, (order as any).guest_token);
       clear();
-      toast.success("Order placed! Heading to the kitchen.");
-      navigate({ to: "/track/$orderId", params: { orderId: order.id } });
+      setPlacedOrderId(order.id);
+      setPhase("success");
     } catch (e: any) {
       toast.error(e.message ?? "Couldn't place order");
-    } finally {
-      setProcessing(false);
+      setPhase("idle");
     }
   };
 
@@ -114,9 +118,51 @@ function Checkout() {
         </div>
       </div>
 
-      <Button className="w-full h-14 mt-6 text-base" disabled={processing} onClick={placeOrder}>
-        {processing ? <><Loader2 className="size-4 mr-2 animate-spin" /> Processing…</> : `Pay & Place Order · ₹${total.toFixed(0)}`}
+      <Button className="w-full h-14 mt-6 text-base" disabled={phase !== "idle"} onClick={placeOrder}>
+        {phase === "processing" ? <><Loader2 className="size-4 mr-2 animate-spin" /> Processing payment…</> : `Pay & Place Order · ₹${total.toFixed(0)}`}
       </Button>
+
+      <Dialog open={phase === "processing" || phase === "success"}>
+        <DialogContent className="max-w-sm text-center [&>button]:hidden">
+          {phase === "processing" ? (
+            <>
+              <DialogTitle className="sr-only">Processing payment</DialogTitle>
+              <DialogDescription className="sr-only">Please wait while we confirm your payment.</DialogDescription>
+              <div className="py-6">
+                <div className="size-16 rounded-full bg-primary/10 grid place-items-center mx-auto mb-4">
+                  <Loader2 className="size-8 text-primary animate-spin" />
+                </div>
+                <p className="font-display text-xl font-semibold">Processing Payment…</p>
+                <p className="text-sm text-muted-foreground mt-1">Securely confirming with {methods.find((m) => m.id === method)?.label}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <DialogTitle className="sr-only">Payment successful</DialogTitle>
+              <DialogDescription className="sr-only">Your order has been placed.</DialogDescription>
+              <div className="py-2">
+                <div className="size-16 rounded-full bg-success/10 grid place-items-center mx-auto mb-4">
+                  <CheckCircle2 className="size-9 text-success" />
+                </div>
+                <p className="font-display text-2xl font-bold">Payment Successful</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mt-3">Order ID</p>
+                <p className="font-mono text-sm">#{placedOrderId?.slice(0, 8)}</p>
+                <div className="inline-flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+                  <Clock className="size-4" /> Estimated time: 15–30 min
+                </div>
+                <div className="grid grid-cols-2 gap-2 mt-6">
+                  <Link to="/track/$orderId" params={{ orderId: placedOrderId! }}>
+                    <Button className="w-full">Track Order</Button>
+                  </Link>
+                  <Link to="/">
+                    <Button variant="outline" className="w-full">Home</Button>
+                  </Link>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
