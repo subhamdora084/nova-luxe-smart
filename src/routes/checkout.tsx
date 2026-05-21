@@ -1,11 +1,13 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { CreditCard, Smartphone, Wallet, Building2, Banknote, Loader2 } from "lucide-react";
+import { CreditCard, Smartphone, Wallet, Building2, Banknote, Loader2, CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart, saveGuestOrderId } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+
 
 export const Route = createFileRoute("/checkout")({
   component: Checkout,
@@ -27,7 +29,8 @@ function Checkout() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [method, setMethod] = useState<Method>("upi");
-  const [processing, setProcessing] = useState(false);
+  const [phase, setPhase] = useState<"idle" | "processing" | "success">("idle");
+  const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
 
   const tax = subtotal * 0.05;
   const total = subtotal + tax;
@@ -35,8 +38,10 @@ function Checkout() {
   const placeOrder = async () => {
     if (items.length === 0) { toast.error("Your cart is empty"); return; }
 
-    setProcessing(true);
+    setPhase("processing");
     try {
+      if (method !== "cash") await new Promise((r) => setTimeout(r, 1800));
+
       const { data: order, error } = await supabase.from("orders").insert({
         user_id: user?.id ?? null,
         table_number: tableNumber,
@@ -60,12 +65,11 @@ function Checkout() {
 
       if (!user) saveGuestOrderId(order.id, (order as any).guest_token);
       clear();
-      toast.success("Order placed! Heading to the kitchen.");
-      navigate({ to: "/track/$orderId", params: { orderId: order.id } });
+      setPlacedOrderId(order.id);
+      setPhase("success");
     } catch (e: any) {
       toast.error(e.message ?? "Couldn't place order");
-    } finally {
-      setProcessing(false);
+      setPhase("idle");
     }
   };
 
