@@ -171,6 +171,7 @@ export type Database = {
       orders: {
         Row: {
           created_at: string
+          guest_token: string
           id: string
           notes: string | null
           payment_method: Database["public"]["Enums"]["payment_method"] | null
@@ -185,6 +186,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          guest_token?: string
           id?: string
           notes?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
@@ -199,6 +201,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          guest_token?: string
           id?: string
           notes?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
@@ -284,12 +287,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_guest_order: {
+        Args: { _order_id: string; _token: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      redeem_reward: {
+        Args: { _points: number; _reward_name: string }
+        Returns: Json
       }
     }
     Enums: {
