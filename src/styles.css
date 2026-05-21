@@ -4,9 +4,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@layer base{
-  #lovable-badge;
-  display:none !important;
+@layer base {
+  #lovable-badge {
+    display: none !important;
+  }
 }
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
