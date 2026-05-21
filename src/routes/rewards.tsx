@@ -44,11 +44,8 @@ function Rewards() {
 
   const redeem = async (m: typeof MILESTONES[number]) => {
     if (!profile || profile.reward_points < m.pts) { toast.error("Not enough points yet"); return; }
-    const newPts = profile.reward_points - m.pts;
-    const { error: e1 } = await supabase.from("reward_redemptions").insert({ user_id: user!.id, reward_name: m.name, points_spent: m.pts });
-    if (e1) { toast.error(e1.message); return; }
-    const { error: e2 } = await supabase.from("profiles").update({ reward_points: newPts }).eq("id", user!.id);
-    if (e2) { toast.error(e2.message); return; }
+    const { error } = await supabase.rpc("redeem_reward", { _reward_name: m.name, _points: m.pts });
+    if (error) { toast.error(error.message); return; }
     toast.success(`Redeemed: ${m.name}`);
     qc.invalidateQueries({ queryKey: ["profile"] });
     qc.invalidateQueries({ queryKey: ["redemptions"] });

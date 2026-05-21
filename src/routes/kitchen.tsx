@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Loader2, ChefHat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,11 +12,11 @@ const NEXT: Record<string, string> = { placed: "confirmed", confirmed: "preparin
 
 function Kitchen() {
   const { user, roles, loading } = useAuth();
-  const qc = useQueryClient();
 
   const { data: orders } = useQuery({
     queryKey: ["kitchen-orders"],
     enabled: !!user && (roles.includes("kitchen") || roles.includes("admin")),
+    refetchInterval: 5000,
     queryFn: async () => {
       const { data, error } = await supabase.from("orders").select("*, order_items(*)").not("status", "in", "(completed,cancelled)").order("created_at");
       if (error) throw error;
@@ -25,13 +24,6 @@ function Kitchen() {
     },
   });
 
-  useEffect(() => {
-    if (!user) return;
-    const ch = supabase.channel("kitchen-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => qc.invalidateQueries({ queryKey: ["kitchen-orders"] }))
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [user, qc]);
 
   if (loading) return <main className="container py-12 text-center"><Loader2 className="animate-spin size-6 mx-auto" /></main>;
   if (!user) return <Gate msg="Sign in required" />;

@@ -27,26 +27,45 @@ const STORAGE_KEY = "nova-cart";
 const TABLE_KEY = "nova-table";
 const GUEST_ORDERS_KEY = "nova-guest-orders";
 
-export function saveGuestOrderId(id: string) {
+export interface GuestOrderRef { id: string; token: string }
+
+export function saveGuestOrderId(id: string, token?: string) {
   if (typeof window === "undefined") return;
   try {
     const raw = localStorage.getItem(GUEST_ORDERS_KEY);
-    const list: string[] = raw ? JSON.parse(raw) : [];
-    if (!list.includes(id)) {
-      list.unshift(id);
+    let list: GuestOrderRef[] = [];
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      list = Array.isArray(parsed)
+        ? parsed.map((v: any) => typeof v === "string" ? { id: v, token: "" } : v)
+        : [];
+    }
+    if (!list.find((o) => o.id === id)) {
+      list.unshift({ id, token: token ?? "" });
       localStorage.setItem(GUEST_ORDERS_KEY, JSON.stringify(list.slice(0, 20)));
     }
   } catch {}
 }
 
-export function getGuestOrderIds(): string[] {
+export function getGuestOrders(): GuestOrderRef[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(GUEST_ORDERS_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((v: any) => typeof v === "string" ? { id: v, token: "" } : v);
   } catch {
     return [];
   }
+}
+
+export function getGuestOrderToken(id: string): string | null {
+  return getGuestOrders().find((o) => o.id === id)?.token || null;
+}
+
+export function getGuestOrderIds(): string[] {
+  return getGuestOrders().map((o) => o.id);
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {

@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, Circle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import { getGuestOrderToken } from "@/hooks/use-cart";
 
 export const Route = createFileRoute("/track/$orderId")({
   component: TrackOrder,
@@ -17,26 +18,27 @@ const LABELS: Record<string, string> = {
 
 function TrackOrder() {
   const { orderId } = Route.useParams();
-  const qc = useQueryClient();
+  const { user } = useAuth();
 
   const { data: order } = useQuery({
-    queryKey: ["order", orderId],
+    queryKey: ["order", orderId, user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("orders").select("*, order_items(*)").eq("id", orderId).single();
+      if (user) {
+        const { data, error } = await supabase
+          .from("orders").select("*, order_items(*)").eq("id", orderId).single();
+        if (error) throw error;
+        return data as any;
+      }
+      const token = getGuestOrderToken(orderId);
+      if (!token) throw new Error("Order not found on this device. Please sign in to view your orders.");
+      const { data, error } = await supabase.rpc("get_guest_order", { _order_id: orderId, _token: token });
       if (error) throw error;
-      return data;
+      if (!data) throw new Error("Order not found.");
+      const payload = data as { order: any; items: any[] };
+      return { ...payload.order, order_items: payload.items };
     },
     refetchInterval: 5000,
   });
-
-  useEffect(() => {
-    const ch = supabase.channel(`order-${orderId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `id=eq.${orderId}` }, () => {
-        qc.invalidateQueries({ queryKey: ["order", orderId] });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [orderId, qc]);
 
   if (!order) return <main className="container py-12 text-center"><Loader2 className="animate-spin size-6 mx-auto" /></main>;
 

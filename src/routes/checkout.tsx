@@ -43,7 +43,7 @@ function Checkout() {
         payment_method: method,
         payment_status: method === "cash" ? "pending" : "paid",
         subtotal, tax, total,
-      }).select().single();
+      }).select("id, guest_token").single();
       if (error) throw error;
 
       const orderItems = items.map((it) => ({
@@ -58,7 +58,7 @@ function Checkout() {
       const { error: e2 } = await supabase.from("order_items").insert(orderItems);
       if (e2) throw e2;
 
-      if (!user) saveGuestOrderId(order.id);
+      if (!user) saveGuestOrderId(order.id, (order as any).guest_token);
       clear();
       toast.success("Order placed! Heading to the kitchen.");
       navigate({ to: "/track/$orderId", params: { orderId: order.id } });
