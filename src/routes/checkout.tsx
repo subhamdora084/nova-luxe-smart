@@ -27,7 +27,7 @@ const methods: { id: Method; label: string; sub: string; icon: typeof CreditCard
 function Checkout() {
   const { items, subtotal, clear, tableNumber } = useCart();
   const { user } = useAuth();
-  const navigate = useNavigate();
+  
   const [method, setMethod] = useState<Method>("upi");
   const [phase, setPhase] = useState<"idle" | "processing" | "success">("idle");
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
