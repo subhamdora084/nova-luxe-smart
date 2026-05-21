@@ -99,7 +99,7 @@ function AdminLogin() {
           </div>
         </div>
         <p className="text-xs text-center text-muted-foreground mt-4">
-          Admin accounts are provisioned by inserting a row in <code className="font-mono">user_roles</code> with role = admin.
+          Contact your system administrator to request access.
         </p>
       </div>
     </main>
