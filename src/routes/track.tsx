@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Clock, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { getGuestOrderIds } from "@/hooks/use-cart";
+import { getGuestOrders } from "@/hooks/use-cart";
 
 export const Route = createFileRoute("/track")({
   component: TrackList,
@@ -12,10 +12,10 @@ export const Route = createFileRoute("/track")({
 
 function TrackList() {
   const { user } = useAuth();
-  const guestIds = getGuestOrderIds();
+  const guests = getGuestOrders();
 
   const { data: orders, isLoading } = useQuery({
-    queryKey: ["my-orders", user?.id, guestIds.join(",")],
+    queryKey: ["my-orders", user?.id, guests.map((g) => g.id).join(",")],
     queryFn: async () => {
       if (user) {
         const { data, error } = await supabase
@@ -24,15 +24,18 @@ function TrackList() {
         if (error) throw error;
         return data;
       }
-      if (guestIds.length === 0) return [];
-      const { data, error } = await supabase
-        .from("orders").select("*")
-        .in("id", guestIds)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
+      if (guests.length === 0) return [];
+      const results = await Promise.all(
+        guests.map(async (g) => {
+          if (!g.token) return null;
+          const { data } = await supabase.rpc("get_guest_order", { _order_id: g.id, _token: g.token });
+          return (data as any)?.order ?? null;
+        })
+      );
+      return results.filter(Boolean).sort((a: any, b: any) => +new Date(b.created_at) - +new Date(a.created_at));
     },
   });
+
 
   return (
     <main className="container mx-auto px-4 py-10 max-w-3xl">
